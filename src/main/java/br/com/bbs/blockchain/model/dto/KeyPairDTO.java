@@ -12,7 +12,7 @@ public class KeyPairDTO {
 
     public KeyPairDTO(String t1, String t2) {
         this.t1 = Base64.getUrlEncoder().encodeToString(t1.getBytes());
-        this.t2 = Base64.getUrlEncoder().encodeToString(t1.getBytes());
+        this.t2 = Base64.getUrlEncoder().encodeToString(t2.getBytes());
     }
 
 }

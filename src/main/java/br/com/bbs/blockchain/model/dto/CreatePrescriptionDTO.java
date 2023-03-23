@@ -5,8 +5,10 @@ import lombok.Data;
 @Data
 public class CreatePrescriptionDTO {
 
-    private String doctorPublicKey;
-    private String patientPublicKey;
-    private String prescriptionData;
+    private String medicine;
+    private String patientKey;
+    private String doctorKey;
+    private String creationDate;
     private String expirationDate;
+    private String signature;
 }

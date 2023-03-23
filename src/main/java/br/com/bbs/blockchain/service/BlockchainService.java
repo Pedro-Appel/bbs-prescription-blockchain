@@ -2,41 +2,41 @@ package br.com.bbs.blockchain.service;
 
 import br.com.bbs.blockchain.model.Block;
 import br.com.bbs.blockchain.model.Prescription;
-import br.com.bbs.blockchain.model.dto.CreatePrescriptionDTO;
 import br.com.bbs.blockchain.model.dto.UserPrescriptionsDTO;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.management.InvalidApplicationException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class BlockchainService {
+    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
-    @Autowired
-    private SecurityService securityService;
     private ArrayList<Block> chain;
     @Getter
     private ArrayList<Prescription> pendingPrescriptions;
 
     private Integer difficulty;
 
-    public BlockchainService() {
+    public BlockchainService() throws Throwable {
         generateGenesisBlock();
         this.pendingPrescriptions = new ArrayList<>();
         this.difficulty = 1;
     }
 
-    public ArrayList<Block> getFullChain(){
+    public List<Block> getFullChain(){
         return this.chain;
     }
 
-    private void generateGenesisBlock() {
+    private void generateGenesisBlock() throws InvalidApplicationException {
         this.chain = new ArrayList<>();
-        chain.add(new Block(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")), new Prescription(), "0"));
+        chain.add(new Block(LocalDateTime.now().format(FORMATTER), new Prescription(), "0"));
     }
 
     private Block getChainLastBlock(){
@@ -47,13 +47,16 @@ public class BlockchainService {
         return this.pendingPrescriptions.add(prescription);
     }
 
-    public String[] mineAllPendingBlocks(){
+    public List<String> mineAllPendingBlocks() throws InvalidApplicationException {
 
-        String[] hashArray = new String[0];
+        List<String> hashArray = new ArrayList<>();
 
-        for(int i = 0; i<this.pendingPrescriptions.size(); i++){
+        if(this.pendingPrescriptions.isEmpty()) return hashArray;
+
+        System.out.println("Starting to mine");
+        for(int i = this.pendingPrescriptions.size(); i > 0; i--){
             Block newBlock = new Block(
-                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")),
+                    LocalDateTime.now().format(FORMATTER),
                     this.pendingPrescriptions.remove(this.pendingPrescriptions.size()-1),
                     getChainLastBlock().getHash()
             );
@@ -61,34 +64,30 @@ public class BlockchainService {
             addBlockToChain(newBlock);
             auditMinedBlock(newBlock); //TODO
 
-            hashArray[i] = newBlock.getHash();
+            hashArray.add(newBlock.getHash());
             this.difficulty += 1;
         }
 
         return hashArray;
     }
 
-    public ArrayList<UserPrescriptionsDTO> getUserPrescriptions(String patientKey) throws InvalidApplicationException {
+    public List<UserPrescriptionsDTO> getUserPrescriptions(String patientKey) throws InvalidApplicationException {
+
         isChainValid();
 
-        int index = 1;
         ArrayList<UserPrescriptionsDTO> userPrescriptions = new ArrayList<>();
 
         for(Block block : this.chain){
-            if(block.isValid(patientKey)){
+            if(block.getPrescriptions().isValid(patientKey)){
 
                 Prescription prescription = block.getPrescriptions();
                 String medicine = prescription.getMedicine();
-                String signature = securityService.encryptPrescription(block);
 
-                userPrescriptions.add(
-                        new UserPrescriptionsDTO(
-                                index,
-                                medicine,
-                                signature
-                        )
-                );
+                userPrescriptions.add(new UserPrescriptionsDTO(medicine, block.getPrescriptions().getSignature()));
             }
+        }
+        if(userPrescriptions.isEmpty()){
+            return null;
         }
         return userPrescriptions;
 
@@ -99,11 +98,13 @@ public class BlockchainService {
             Block currentBlock = this.chain.get(i);
             Block previousBlock = this.chain.get(i - 1);
 
-            if(!currentBlock.getHash().equals(previousBlock.getHash())){
+            if(!currentBlock.getPreviousHash().equals(previousBlock.getHash())){
+                System.out.println("Blockchain is corrupted, broken sequence");
                 throw new InvalidApplicationException("Blockchain is corrupted, broken sequence");
             }
 
             if(!currentBlock.validateHash(currentBlock.getHash())){
+                System.out.println("Blockchain is corrupted, invalid hash");
                 throw new InvalidApplicationException("Blockchain is corrupted, invalid hash");
             }
         }
@@ -113,6 +114,7 @@ public class BlockchainService {
     //TODO
     private void auditMinedBlock(Block newBlock) {
         System.out.println("-----------Block audition--------------");
+        System.out.println(newBlock);
     }
 
     private boolean addBlockToChain(Block newBlock) {

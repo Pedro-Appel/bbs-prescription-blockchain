@@ -9,8 +9,9 @@ public class AuthenticatorService {
     @Value("${server.appKey}")
     private String serverAppKey;
 
-    public boolean checkAppkey(String appKey) {
-        System.out.println("Request appKey: "+ appKey + " server app Key: "+ serverAppKey);
+    public boolean checkAppKey(String appKey) {
+
         return appKey.equals(serverAppKey);
+
     }
 }
