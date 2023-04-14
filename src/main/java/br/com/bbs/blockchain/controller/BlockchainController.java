@@ -41,7 +41,7 @@ public class BlockchainController {
 
         try {
             List<UserPrescriptionsDTO> userPrescriptions = blockchain.getUserPrescriptions(key);
-            if(userPrescriptions == null){
+            if(userPrescriptions.isEmpty()){
                 return ResponseEntity.noContent().build();
             }
             return ResponseEntity.ok(userPrescriptions);
@@ -52,7 +52,7 @@ public class BlockchainController {
     }
 
     @PostMapping()
-    public ResponseEntity addBlockToValidation(@RequestBody() CreatePrescriptionDTO createPrescriptionDTO){
+    public ResponseEntity<String> addBlockToValidation(@RequestBody() CreatePrescriptionDTO createPrescriptionDTO){
 
         Prescription prescription = new Prescription(createPrescriptionDTO);
         boolean blockIncludedSuccessfully = blockchain.includePrescription(prescription);

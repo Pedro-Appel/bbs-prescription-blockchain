@@ -6,8 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.management.InvalidApplicationException;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 @RestController()
@@ -17,13 +15,13 @@ public class MinerController {
     BlockchainService blockchain;
 
     @GetMapping()
-    public ResponseEntity<List> mineAllBlocks(){
+    public ResponseEntity<List<String>> mineAllBlocks() throws InvalidApplicationException {
         try {
-            List hashs = blockchain.mineAllPendingBlocks();
-            if(hashs.isEmpty()) return ResponseEntity.noContent().build();
-            return ResponseEntity.ok(hashs);
+            List<String> listOfHash = blockchain.mineAllPendingBlocks();
+            if(listOfHash.isEmpty()) return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(listOfHash);
         } catch (InvalidApplicationException e) {
-            throw new RuntimeException(e);
+            throw new InvalidApplicationException(e);
         }
     }
 

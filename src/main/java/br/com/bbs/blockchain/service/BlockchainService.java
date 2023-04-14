@@ -4,17 +4,19 @@ import br.com.bbs.blockchain.model.Block;
 import br.com.bbs.blockchain.model.Prescription;
 import br.com.bbs.blockchain.model.dto.UserPrescriptionsDTO;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Level;
 import org.springframework.stereotype.Service;
 
 import javax.management.InvalidApplicationException;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
+@Log4j2
 public class BlockchainService {
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
@@ -24,7 +26,7 @@ public class BlockchainService {
 
     private Integer difficulty;
 
-    public BlockchainService() throws Throwable {
+    public BlockchainService() throws InvalidApplicationException {
         generateGenesisBlock();
         this.pendingPrescriptions = new ArrayList<>();
         this.difficulty = 1;
@@ -53,7 +55,6 @@ public class BlockchainService {
 
         if(this.pendingPrescriptions.isEmpty()) return hashArray;
 
-        System.out.println("Starting to mine");
         for(int i = this.pendingPrescriptions.size(); i > 0; i--){
             Block newBlock = new Block(
                     LocalDateTime.now().format(FORMATTER),
@@ -87,7 +88,7 @@ public class BlockchainService {
             }
         }
         if(userPrescriptions.isEmpty()){
-            return null;
+            return Collections.emptyList();
         }
         return userPrescriptions;
 
@@ -99,12 +100,12 @@ public class BlockchainService {
             Block previousBlock = this.chain.get(i - 1);
 
             if(!currentBlock.getPreviousHash().equals(previousBlock.getHash())){
-                System.out.println("Blockchain is corrupted, broken sequence");
+                log.log(Level.DEBUG, "Blockchain is corrupted, broken sequence");
                 throw new InvalidApplicationException("Blockchain is corrupted, broken sequence");
             }
 
             if(!currentBlock.validateHash(currentBlock.getHash())){
-                System.out.println("Blockchain is corrupted, invalid hash");
+                log.log(Level.DEBUG, "Blockchain is corrupted, invalid hash");
                 throw new InvalidApplicationException("Blockchain is corrupted, invalid hash");
             }
         }
@@ -113,8 +114,8 @@ public class BlockchainService {
 
     //TODO
     private void auditMinedBlock(Block newBlock) {
-        System.out.println("-----------Block audition--------------");
-        System.out.println(newBlock);
+        log.log(Level.DEBUG, "-----------Block audition--------------");
+        log.log(Level.DEBUG, newBlock);
     }
 
     private boolean addBlockToChain(Block newBlock) {

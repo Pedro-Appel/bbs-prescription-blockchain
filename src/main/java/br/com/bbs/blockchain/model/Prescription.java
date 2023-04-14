@@ -11,11 +11,13 @@ public class Prescription {
 
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
     public static final ZoneId ZONE_ID = ZoneId.of("America/Sao_Paulo");
+    @Getter
     private String doctorKey;
     @Getter
     private String patientKey;
     private String medicine;
     private String signature;
+    @Getter
     private String creationDate;
     private String expirationDate;
     public Prescription() {

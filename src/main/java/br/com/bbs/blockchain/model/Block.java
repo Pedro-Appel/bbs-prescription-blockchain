@@ -30,13 +30,12 @@ public class Block {
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
             byte[] byteHash = messageDigest.digest(originalString.getBytes());
-            String hexaHash = new BigInteger(1, byteHash).toString(16);
+            String hexHash = new BigInteger(1, byteHash).toString(16);
             StringBuilder bld = new StringBuilder();
-            while(hexaHash.length() < 128){
+            while(hexHash.length() < 128){
                 bld.append("0");
-                hexaHash = bld + hexaHash;
             }
-            return hexaHash;
+            return bld + hexHash;
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             throw new InvalidApplicationException("No Such Algorithm");
