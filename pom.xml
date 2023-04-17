@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>br.com.bbs</groupId>
 	<artifactId>blockchain</artifactId>
-	<!-- <version>1.0.0</version> -->
+	<version>1.0.0</version>
 	<name>blockchain</name>
 	<description>Medical prescription using blockchain technology</description>
 	<properties>
@@ -35,6 +35,7 @@
     </dependencies>
 
 	<build>
+	<finalName>blockchain</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
