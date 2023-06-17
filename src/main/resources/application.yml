@@ -1,3 +1,14 @@
 
 server:
-  appKey: "1ipo2uawmve3408muv45c328muj"
+  appKey: ${APP_KEY:test}
+  port: ${PORT:8080}
+
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics

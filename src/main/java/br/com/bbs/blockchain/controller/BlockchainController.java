@@ -6,6 +6,7 @@ import br.com.bbs.blockchain.model.dto.CreatePrescriptionDTO;
 import br.com.bbs.blockchain.model.dto.UserPrescriptionsDTO;
 import br.com.bbs.blockchain.service.AuthenticatorService;
 import br.com.bbs.blockchain.service.BlockchainService;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.management.InvalidApplicationException;
 import java.util.List;
 
+@Log4j2
 @RestController()
 @RequestMapping("/chain")
 public class BlockchainController {
@@ -23,10 +25,10 @@ public class BlockchainController {
     BlockchainService blockchain;
 
     @GetMapping(path = "/heathCheck")
-    public String heathCheck(@RequestParam() String appKey){
+    public ResponseEntity heathCheck(@RequestParam() String appKey){
 
-        if(!authenticatorService.checkAppKey(appKey)) return null;
-        return "STATUS UP";
+        if(!authenticatorService.checkAppKey(appKey)) return ResponseEntity.status(403).build();
+        return ResponseEntity.ok("STATUS UP");
 
     }
     @GetMapping()
@@ -54,6 +56,7 @@ public class BlockchainController {
     @PostMapping()
     public ResponseEntity<String> addBlockToValidation(@RequestBody() CreatePrescriptionDTO createPrescriptionDTO){
 
+        log.info("Adding block to validation ... {}", createPrescriptionDTO.toString());
         Prescription prescription = new Prescription(createPrescriptionDTO);
         boolean blockIncludedSuccessfully = blockchain.includePrescription(prescription);
         if(blockIncludedSuccessfully) {

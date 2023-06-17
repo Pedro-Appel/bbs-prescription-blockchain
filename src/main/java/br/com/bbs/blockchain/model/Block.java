@@ -1,11 +1,13 @@
 package br.com.bbs.blockchain.model;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 
 import javax.management.InvalidApplicationException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+@Log4j2
 public class Block {
 
     private String timeStamp;
@@ -34,8 +36,9 @@ public class Block {
             StringBuilder bld = new StringBuilder();
             while(hexHash.length() < 128){
                 bld.append("0");
+                hexHash = bld + hexHash;
             }
-            return bld + hexHash;
+            return hexHash;
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             throw new InvalidApplicationException("No Such Algorithm");
@@ -55,6 +58,7 @@ public class Block {
         while (!this.hash.substring(0, difficulty).equals(zeroSequence)){
             this.nonce = this.nonce.add(BigInteger.ONE);
             this.hash = this.calculateHash();
+
         }
         return true;
     }

@@ -18,7 +18,7 @@ public class MinerController {
     public ResponseEntity<List<String>> mineAllBlocks() throws InvalidApplicationException {
         try {
             List<String> listOfHash = blockchain.mineAllPendingBlocks();
-            if(listOfHash.isEmpty()) return ResponseEntity.noContent().build();
+            if(listOfHash.isEmpty()) return ResponseEntity.status(201).build();
             return ResponseEntity.ok(listOfHash);
         } catch (InvalidApplicationException e) {
             throw new InvalidApplicationException(e);

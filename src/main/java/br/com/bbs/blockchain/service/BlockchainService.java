@@ -50,7 +50,6 @@ public class BlockchainService {
     }
 
     public List<String> mineAllPendingBlocks() throws InvalidApplicationException {
-
         List<String> hashArray = new ArrayList<>();
 
         if(this.pendingPrescriptions.isEmpty()) return hashArray;
