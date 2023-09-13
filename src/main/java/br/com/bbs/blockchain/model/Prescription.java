@@ -39,12 +39,6 @@ public class Prescription {
 
     }
 
-    public boolean verifyPatientKey (String patientPublicKey){
-
-        return patientPublicKey.equals(this.patientKey);
-
-    }
-
     public boolean verifyPrescriptionExpiration() {
 
         return LocalDate.now(ZoneId.of("America/Sao_Paulo")).isBefore(this.expirationDate);
