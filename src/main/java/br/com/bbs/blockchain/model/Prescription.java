@@ -1,45 +1,41 @@
 package br.com.bbs.blockchain.model;
 
-import br.com.bbs.blockchain.model.dto.CreatePrescriptionDTO;
+import br.com.bbs.blockchain.model.dto.CreatePrescription;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
 public class Prescription {
 
-    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
-    public static final ZoneId ZONE_ID = ZoneId.of("America/Sao_Paulo");
     @Getter
-    private String doctorKey;
+    private final String doctorKey;
     @Getter
-    private String patientKey;
-    private String medicine;
-    private String signature;
+    private final String patientKey;
     @Getter
-    private String creationDate;
-    private String expirationDate;
+    private final String medicine;
+    @Getter
+    private final String signature;
+    @Getter
+    private final LocalDate creationDate;
+    private final LocalDate expirationDate;
+
     public Prescription() {
+        this.doctorKey = "";
+        this.patientKey = "";
+        this.medicine = "";
+        this.signature = "";
+        this.expirationDate = LocalDate.now(ZoneId.of("America/Sao_Paulo"));
+        this.creationDate = LocalDate.now(ZoneId.of("America/Sao_Paulo"));
     }
 
-
-    public Prescription(String doctorKey, String patientKey, String medicine, String signature, String creationDate, String expirationDate) {
-        this.doctorKey = doctorKey;
-        this.patientKey = patientKey;
-        this.medicine = medicine;
-        this.signature = signature;
-        this.creationDate = creationDate;
-        this.expirationDate = expirationDate;
-    }
-
-    public Prescription(CreatePrescriptionDTO createPrescriptionDTO) {
-        this.doctorKey = createPrescriptionDTO.getDoctorKey();
-        this.patientKey = createPrescriptionDTO.getPatientKey();
-        this.medicine = createPrescriptionDTO.getMedicine();
-        this.signature = createPrescriptionDTO.getSignature();
-        this.expirationDate = createPrescriptionDTO.getExpirationDate();
-        this.creationDate = createPrescriptionDTO.getCreationDate();
+    public Prescription(CreatePrescription createPrescription) {
+        this.doctorKey = createPrescription.doctorKey();
+        this.patientKey = createPrescription.patientKey();
+        this.medicine = createPrescription.medicine();
+        this.signature = createPrescription.signature();
+        this.expirationDate = createPrescription.expirationDate();
+        this.creationDate = createPrescription.creationDate();
 
     }
 
@@ -51,22 +47,7 @@ public class Prescription {
 
     public boolean verifyPrescriptionExpiration() {
 
-        return LocalDateTime.now(ZONE_ID)
-                .isBefore(LocalDateTime.parse(this.expirationDate, FORMATTER));
+        return LocalDate.now(ZoneId.of("America/Sao_Paulo")).isBefore(this.expirationDate);
 
-    }
-
-    public boolean isValid(String patientKey) {
-        return  this.verifyPatientKey(patientKey) && this.verifyPrescriptionExpiration();
-    }
-
-    public String getMedicine() {
-
-        return this.medicine;
-
-    }
-
-    public String getSignature() {
-        return this.signature;
     }
 }
