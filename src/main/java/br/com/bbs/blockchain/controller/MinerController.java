@@ -1,9 +1,11 @@
 package br.com.bbs.blockchain.controller;
 
-import br.com.bbs.blockchain.service.BlockchainService;
+import br.com.bbs.blockchain.service.impl.BlockchainService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.management.InvalidApplicationException;
 import java.util.List;
