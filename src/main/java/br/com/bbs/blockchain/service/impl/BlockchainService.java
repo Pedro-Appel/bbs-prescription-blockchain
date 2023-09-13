@@ -1,8 +1,10 @@
-package br.com.bbs.blockchain.service;
+package br.com.bbs.blockchain.service.impl;
 
 import br.com.bbs.blockchain.model.Block;
 import br.com.bbs.blockchain.model.Prescription;
 import br.com.bbs.blockchain.model.dto.UserPrescriptionsDTO;
+import br.com.bbs.blockchain.service.ChainRepository;
+import br.com.bbs.blockchain.service.PendingPrescriptionsRepository;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
@@ -10,43 +12,40 @@ import org.springframework.stereotype.Service;
 
 import javax.management.InvalidApplicationException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service
 @Log4j2
 public class BlockchainService {
-    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    private final ChainRepository chain;
 
-    private ArrayList<Block> chain;
     @Getter
-    private ArrayList<Prescription> pendingPrescriptions;
+    private final PendingPrescriptionsRepository pendingPrescriptions;
 
     private Integer difficulty;
 
-    public BlockchainService() throws InvalidApplicationException {
-        generateGenesisBlock();
-        this.pendingPrescriptions = new ArrayList<>();
+    public BlockchainService(PendingPrescriptionsRepository pendingPrescriptionsRepository, ChainRepository chain) throws InvalidApplicationException {
+        this.pendingPrescriptions = pendingPrescriptionsRepository;
+        this.chain = chain;
         this.difficulty = 1;
+        generateGenesisBlock();
     }
 
     public List<Block> getFullChain(){
-        return this.chain;
+        return this.chain.findAll();
     }
 
     private void generateGenesisBlock() throws InvalidApplicationException {
-        this.chain = new ArrayList<>();
-        chain.add(new Block(LocalDateTime.now().format(FORMATTER), new Prescription(), "0"));
-    }
-
-    private Block getChainLastBlock(){
-        return this.chain.get(this.chain.size() - 1);
+        chain.save(new Block(
+                LocalDateTime.now(ZoneId.of("America/Sao_Paulo")),
+                new Prescription(),
+                "0"));
     }
 
     public boolean includePrescription(Prescription prescription){
-        return this.pendingPrescriptions.add(prescription);
+        return this.pendingPrescriptions.save(prescription);
     }
 
     public List<String> mineAllPendingBlocks() throws InvalidApplicationException {
@@ -56,16 +55,16 @@ public class BlockchainService {
 
         for(int i = this.pendingPrescriptions.size(); i > 0; i--){
             Block newBlock = new Block(
-                    LocalDateTime.now().format(FORMATTER),
-                    this.pendingPrescriptions.remove(this.pendingPrescriptions.size()-1),
-                    getChainLastBlock().getHash()
+                    LocalDateTime.now(),
+                    this.pendingPrescriptions.removeLast(),
+                    chain.findLast().getHash()
             );
-            newBlock.mineBlock(this.difficulty);
+            newBlock.mineBlock(difficulty);
             addBlockToChain(newBlock);
             auditMinedBlock(newBlock); //TODO
 
             hashArray.add(newBlock.getHash());
-            this.difficulty += 1;
+            difficulty += 1;
         }
 
         return hashArray;
@@ -76,27 +75,15 @@ public class BlockchainService {
         isChainValid();
 
         ArrayList<UserPrescriptionsDTO> userPrescriptions = new ArrayList<>();
-
-        for(Block block : this.chain){
-            if(block.getPrescriptions().isValid(patientKey)){
-
-                Prescription prescription = block.getPrescriptions();
-                String medicine = prescription.getMedicine();
-
-                userPrescriptions.add(new UserPrescriptionsDTO(medicine, block.getPrescriptions().getSignature()));
-            }
-        }
-        if(userPrescriptions.isEmpty()){
-            return Collections.emptyList();
-        }
+        chain.findAllById(patientKey).forEach(b -> userPrescriptions.add(new UserPrescriptionsDTO(b)));
         return userPrescriptions;
 
-    }
+}
 
-    public boolean isChainValid() throws InvalidApplicationException {
-        for(int i = 1; i<this.chain.size(); i++){
-            Block currentBlock = this.chain.get(i);
-            Block previousBlock = this.chain.get(i - 1);
+    public void isChainValid() throws InvalidApplicationException {
+        for(int i = 1; i< chain.count(); i++){
+            Block currentBlock = chain.findByIndex(i);
+            Block previousBlock = chain.findByIndex(i - 1);
 
             if(!currentBlock.getPreviousHash().equals(previousBlock.getHash())){
                 log.log(Level.DEBUG, "Blockchain is corrupted, broken sequence");
@@ -108,7 +95,6 @@ public class BlockchainService {
                 throw new InvalidApplicationException("Blockchain is corrupted, invalid hash");
             }
         }
-        return true;
     }
 
     //TODO
@@ -117,7 +103,7 @@ public class BlockchainService {
         log.log(Level.DEBUG, newBlock);
     }
 
-    private boolean addBlockToChain(Block newBlock) {
-        return this.chain.add(newBlock);
+    private void addBlockToChain(Block newBlock) {
+        chain.save(newBlock);
     }
 }
