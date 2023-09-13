@@ -2,10 +2,9 @@ package br.com.bbs.blockchain.controller;
 
 import br.com.bbs.blockchain.model.Block;
 import br.com.bbs.blockchain.model.Prescription;
-import br.com.bbs.blockchain.model.dto.CreatePrescriptionDTO;
+import br.com.bbs.blockchain.model.dto.CreatePrescription;
 import br.com.bbs.blockchain.model.dto.UserPrescriptionsDTO;
-import br.com.bbs.blockchain.service.AuthenticatorService;
-import br.com.bbs.blockchain.service.BlockchainService;
+import br.com.bbs.blockchain.service.impl.BlockchainService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,31 +17,19 @@ import java.util.List;
 @RestController()
 @RequestMapping("/chain")
 public class BlockchainController {
-
-    @Autowired
-    AuthenticatorService authenticatorService;
     @Autowired
     BlockchainService blockchain;
 
-    @GetMapping(path = "/heathCheck")
-    public ResponseEntity heathCheck(@RequestParam() String appKey){
-
-        if(!authenticatorService.checkAppKey(appKey)) return ResponseEntity.status(403).build();
-        return ResponseEntity.ok("STATUS UP");
-
-    }
     @GetMapping()
-    public ResponseEntity<List<Block>> getChain(@RequestParam() String appKey){
-
-        if(!authenticatorService.checkAppKey(appKey)) return ResponseEntity.badRequest().build();
+    public ResponseEntity<List<Block>> getChain(){
         return ResponseEntity.ok(blockchain.getFullChain());
     }
 
-    @GetMapping("/{key}/prescription")
-    public ResponseEntity<List<UserPrescriptionsDTO>> getUserPrescriptions(@PathVariable String key) {
+    @GetMapping("/prescription")
+    public ResponseEntity<List<UserPrescriptionsDTO>> getUserPrescriptions(@RequestParam String patientKey) {
 
         try {
-            List<UserPrescriptionsDTO> userPrescriptions = blockchain.getUserPrescriptions(key);
+            List<UserPrescriptionsDTO> userPrescriptions = blockchain.getUserPrescriptions(patientKey);
             if(userPrescriptions.isEmpty()){
                 return ResponseEntity.noContent().build();
             }
@@ -54,10 +41,10 @@ public class BlockchainController {
     }
 
     @PostMapping()
-    public ResponseEntity<String> addBlockToValidation(@RequestBody() CreatePrescriptionDTO createPrescriptionDTO){
+    public ResponseEntity<String> addBlockToValidation(@RequestBody() CreatePrescription createPrescription){
 
-        log.info("Adding block to validation ... {}", createPrescriptionDTO.toString());
-        Prescription prescription = new Prescription(createPrescriptionDTO);
+        log.info("Adding block to validation ... {}", createPrescription.toString());
+        Prescription prescription = new Prescription(createPrescription);
         boolean blockIncludedSuccessfully = blockchain.includePrescription(prescription);
         if(blockIncludedSuccessfully) {
             return ResponseEntity.ok().build();
