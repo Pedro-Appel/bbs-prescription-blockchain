@@ -1,69 +1,61 @@
 package br.com.bbs.blockchain.model;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.management.InvalidApplicationException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 
 @Log4j2
 public class Block {
 
-    private String timeStamp;
+    private final LocalDateTime timeStamp;
     @Getter
-    private Prescription prescriptions;
+    private final Prescription prescription;
     @Getter
-    private String previousHash;
+    private final String previousHash;
     @Getter
     private String hash;
     private BigInteger nonce = BigInteger.valueOf(0);
 
-    public Block(String timeStamp, Prescription prescriptions, String previousHash) throws InvalidApplicationException {
+    public Block(LocalDateTime timeStamp, Prescription prescriptions, String previousHash) throws InvalidApplicationException {
         this.timeStamp = timeStamp;
-        this.prescriptions = prescriptions;
+        this.prescription = prescriptions;
         this.previousHash = previousHash;
         this.hash = this.calculateHash();
     }
 
     private String calculateHash() throws InvalidApplicationException {
-        String originalString = this.timeStamp + this.prescriptions.toString() + this.previousHash + this.nonce;
+        String originalString = timeStamp + prescription.toString() + previousHash + nonce;
 
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
             byte[] byteHash = messageDigest.digest(originalString.getBytes());
-            String hexHash = new BigInteger(1, byteHash).toString(16);
-            StringBuilder bld = new StringBuilder();
-            while(hexHash.length() < 128){
-                bld.append("0");
-                hexHash = bld + hexHash;
-            }
-            return hexHash;
+            return StringUtils.leftPad(new BigInteger(1, byteHash).toString(16), 128, "0");
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             throw new InvalidApplicationException("No Such Algorithm");
         }
     }
 
-    public boolean mineBlock(Integer difficulty) throws InvalidApplicationException {
+    public void mineBlock(Integer difficulty) throws InvalidApplicationException {
 
-        String zeroSequence = "";
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for(int i = 0; i< difficulty; i++) {
-            stringBuilder.append("0");
-        }
-        zeroSequence = stringBuilder.toString();
+        String zeroSequence = "0".repeat(Math.max(0, difficulty));
 
         while (!this.hash.substring(0, difficulty).equals(zeroSequence)){
             this.nonce = this.nonce.add(BigInteger.ONE);
             this.hash = this.calculateHash();
-
         }
-        return true;
     }
 
     public boolean validateHash(String hash) throws InvalidApplicationException {
         return hash.equals(this.calculateHash());
+    }
+
+    public boolean validate(String patientKey) {
+        return this.getPrescription().getPatientKey().equals(patientKey) && prescription.verifyPrescriptionExpiration();
     }
 }
