@@ -1,18 +1,18 @@
 package br.com.bbs.blockchain.model.dto;
 
+import br.com.bbs.blockchain.model.Block;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
-import lombok.Setter;
 
-@Setter
 @Getter
 @JsonSerialize
-public class UserPrescriptionsDTO {
-    private String medicine;
-    private String signature;
+public class UserPrescriptionsDTO{
 
-    public UserPrescriptionsDTO(String medicine, String signature) {
-        this.medicine = medicine;
-        this.signature = signature;
+    private final String medicine;
+    private final String signature;
+
+    public UserPrescriptionsDTO(Block block) {
+        this.medicine = block.getPrescription().getMedicine();
+        this.signature = block.getPrescription().getSignature();
     }
 }
