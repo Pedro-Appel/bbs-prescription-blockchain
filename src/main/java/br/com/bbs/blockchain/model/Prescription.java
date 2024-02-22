@@ -15,7 +15,9 @@ public class Prescription {
     private String doctorKey;
     @Getter
     private String patientKey;
+    @Getter
     private String medicine;
+    @Getter
     private String signature;
     @Getter
     private String creationDate;
@@ -60,13 +62,4 @@ public class Prescription {
         return  this.verifyPatientKey(patientKey) && this.verifyPrescriptionExpiration();
     }
 
-    public String getMedicine() {
-
-        return this.medicine;
-
-    }
-
-    public String getSignature() {
-        return this.signature;
-    }
 }

@@ -1,22 +1,22 @@
 package br.com.bbs.blockchain.model;
+
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.management.InvalidApplicationException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+@Getter
 @Log4j2
 public class Block {
 
-    private String timeStamp;
-    @Getter
-    private Prescription prescriptions;
-    @Getter
-    private String previousHash;
-    @Getter
     private String hash;
+    private final String timeStamp;
+    private final String previousHash;
+    private final Prescription prescriptions;
     private BigInteger nonce = BigInteger.valueOf(0);
 
     public Block(String timeStamp, Prescription prescriptions, String previousHash) throws InvalidApplicationException {
@@ -33,34 +33,27 @@ public class Block {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
             byte[] byteHash = messageDigest.digest(originalString.getBytes());
             String hexHash = new BigInteger(1, byteHash).toString(16);
-            StringBuilder bld = new StringBuilder();
-            while(hexHash.length() < 128){
-                bld.append("0");
-                hexHash = bld + hexHash;
-            }
+            log.info("HexHash {} size, {} nonce, {}", hexHash.length(), this.nonce,hexHash);
+
+            if (hexHash.length() < 128) hexHash = StringUtils.leftPad(hexHash, 128, "0");
+
+            log.info("HexHash {} size, {} nonce, {}", hexHash.length(), this.nonce,hexHash);
             return hexHash;
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             throw new InvalidApplicationException("No Such Algorithm");
         }
     }
 
-    public boolean mineBlock(Integer difficulty) throws InvalidApplicationException {
+    public void mineBlock(Integer difficulty) throws InvalidApplicationException {
 
-        String zeroSequence = "";
-        StringBuilder stringBuilder = new StringBuilder();
+        String zeroSequence = "0".repeat(Math.max(0, difficulty));
 
-        for(int i = 0; i< difficulty; i++) {
-            stringBuilder.append("0");
-        }
-        zeroSequence = stringBuilder.toString();
-
-        while (!this.hash.substring(0, difficulty).equals(zeroSequence)){
+        while (!this.hash.substring(0, difficulty).equals(zeroSequence)) {
             this.nonce = this.nonce.add(BigInteger.ONE);
             this.hash = this.calculateHash();
-
         }
-        return true;
+        log.info("Difficulty = {}", difficulty);
     }
 
     public boolean validateHash(String hash) throws InvalidApplicationException {

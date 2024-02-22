@@ -24,13 +24,6 @@ public class BlockchainController {
     @Autowired
     BlockchainService blockchain;
 
-    @GetMapping(path = "/heathCheck")
-    public ResponseEntity heathCheck(@RequestParam() String appKey){
-
-        if(!authenticatorService.checkAppKey(appKey)) return ResponseEntity.status(403).build();
-        return ResponseEntity.ok("STATUS UP");
-
-    }
     @GetMapping()
     public ResponseEntity<List<Block>> getChain(@RequestParam() String appKey){
 

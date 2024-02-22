@@ -3,7 +3,6 @@ package br.com.bbs.blockchain.service;
 import br.com.bbs.blockchain.model.Block;
 import br.com.bbs.blockchain.model.Prescription;
 import br.com.bbs.blockchain.model.dto.UserPrescriptionsDTO;
-import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
 import org.springframework.stereotype.Service;
@@ -21,15 +20,14 @@ public class BlockchainService {
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
     private ArrayList<Block> chain;
-    @Getter
-    private ArrayList<Prescription> pendingPrescriptions;
+
+    private final ArrayList<Prescription> pendingPrescriptions = new ArrayList<>() ;
 
     private Integer difficulty;
 
     public BlockchainService() throws InvalidApplicationException {
         generateGenesisBlock();
-        this.pendingPrescriptions = new ArrayList<>();
-        this.difficulty = 1;
+        this.difficulty = 2;
     }
 
     public List<Block> getFullChain(){
@@ -50,6 +48,7 @@ public class BlockchainService {
     }
 
     public List<String> mineAllPendingBlocks() throws InvalidApplicationException {
+
         List<String> hashArray = new ArrayList<>();
 
         if(this.pendingPrescriptions.isEmpty()) return hashArray;
@@ -73,7 +72,7 @@ public class BlockchainService {
 
     public List<UserPrescriptionsDTO> getUserPrescriptions(String patientKey) throws InvalidApplicationException {
 
-        isChainValid();
+        validateChain();
 
         ArrayList<UserPrescriptionsDTO> userPrescriptions = new ArrayList<>();
 
@@ -93,7 +92,7 @@ public class BlockchainService {
 
     }
 
-    public boolean isChainValid() throws InvalidApplicationException {
+    public void validateChain() throws InvalidApplicationException {
         for(int i = 1; i<this.chain.size(); i++){
             Block currentBlock = this.chain.get(i);
             Block previousBlock = this.chain.get(i - 1);
@@ -108,7 +107,6 @@ public class BlockchainService {
                 throw new InvalidApplicationException("Blockchain is corrupted, invalid hash");
             }
         }
-        return true;
     }
 
     //TODO
@@ -117,7 +115,11 @@ public class BlockchainService {
         log.log(Level.DEBUG, newBlock);
     }
 
-    private boolean addBlockToChain(Block newBlock) {
-        return this.chain.add(newBlock);
+    private void addBlockToChain(Block newBlock) {
+        this.chain.add(newBlock);
+    }
+
+    public List<Prescription> getPendingPrescriptions() {
+        return Collections.unmodifiableList(this.pendingPrescriptions);
     }
 }
